@@ -1,0 +1,35 @@
+{
+    "motor":{
+        "gpio_pin":4,
+        "esc_max_pulse_length":2000,
+        "esc_min_pulse_length":700
+    },
+    "swash_servos": {
+        "right":{
+            "position_angle":60,
+            "gpio_pin":18,
+            "centre_offset":0,
+            "invert_up_down":1
+        },
+        "rear":{
+            "position_angle":180,
+            "gpio_pin":17,
+            "centre_offset":4,
+            "invert_up_down":0
+        },
+        "left":{
+            "position_angle":300,
+            "gpio_pin":22,
+            "centre_offset":0,
+            "invert_up_down":0
+    },
+    "tail_servo": {
+        "name": "tail",
+        "gpio_pin":27,
+        "centre_offset":0,
+        "invert_up_down":0
+    },
+    "gyro":{
+        "tolerance":0.3
+    }
+}
