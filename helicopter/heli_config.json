@@ -1,4 +1,8 @@
 {
+    "server":{
+        "ip" : "0.0.0.0",
+        "port": 4371
+    },
     "motor":{
         "gpio_pin":4,
         "esc_max_pulse_length":2000,
