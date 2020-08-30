@@ -1,15 +1,15 @@
-from pithonwy.actuators.motor import Motor
-from pithonwy.actuators.servo import Servo
-from pithonwy.sensors.gyro import Gyro
+from pithonwy.actuators import Motor
+from pithonwy.actuators import Servo
+# from pithonwy.sensors import Gyro
 from swash_plate import SwashPlate
 from tail_servo import TailServo
 import json
 
 class Helicopter:
-    def __init__(self, config):
+    def __init__(self, config='./heli_confi.json'):
         # Get the sensors/actuators that we will need
-        # Gyro
-        self.gyro = Gyro()
+        # # Gyro
+        # self.gyro = Gyro()
         # Main motor - arm it so it's ready for connection
         self.motor = Motor(**config.motor)
         self.motor.arm()
@@ -19,6 +19,9 @@ class Helicopter:
         self.tail = TailServo(**config.tail_servo)
     def arm(self):
         self.m.arm()
+    def start_motor(self,initial_speed = 0.3):
+        """ Slowly spins up the motor to the requested speed """
+        self.motor.spin_up(limit=initial_speed)
     def level_swash(self):
         [s.centre() for s in self.swash_plate]
     def up_more(self):

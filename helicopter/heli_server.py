@@ -5,7 +5,7 @@ import json
 import sys
 import socket
 import socketserver
-
+# from pilot import HelicopterPilot
 
 class HeliServerConnectionHandler(socketserver.StreamRequestHandler):
     """
@@ -18,16 +18,23 @@ class HeliServerConnectionHandler(socketserver.StreamRequestHandler):
     connection_active = False
 
     def handle(self):
-        print("handle() called")
-        self.connection_active = True
         # self.rfile is a file-like object created by the handler;
         # we can now use e.g. readline() instead of raw recv() calls
+        connection_test_request = self.rfile.read(1)
+        if connection_test_request == bytes([1]):
+            # Send a 'connection successful' message back
+            self.wfile.write(bytes([1]))
+            self.connection_active = True
+            print("Controller connection established")
+        else:
+            raise ConnectionError()
+        # pilot = HelicopterPilot
         while self.connection_active:
-            self.data = self.rfile.readline().strip()
-            print(f"{self.client_address[0]} wrote:")
-            print(self.data)
-        # just send back the same data, but upper-cased
-        # self.request.sendall(self.data.upper())
+            # Read the data (raw bytes)
+            raw_data = self.rfile.readline().strip()
+            # Decode the data
+            data = raw_data.decode('utf-8')
+            print(f"{self.client_address[0]} wrote: {data}")
     
     def finish(self):
         print("Finish called")
