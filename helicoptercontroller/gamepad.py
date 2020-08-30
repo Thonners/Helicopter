@@ -20,17 +20,26 @@ class GamePad:
         # If so, get reference to it
         self.gamepad = devices.gamepads[0]
         # Initialise the status of all the possible inputs
+        self.stop_demand = False
+        self.start_demand = False
         self.throttle_demand = 0
         self.yaw_demand = 0
         self.pitch_demand = 0
         self.roll_demand = 0
+        self.init_connection_demand = False
+        # Make a note of the button states, for compound button press requirements
+        self.left_trigger_pressed = False
+        self.right_trigger_pressed = False
 
     def update_inputs(self):
         events = self.gamepad.read()
         for event in events:
             # print(event.code)
             # if abs(event.state) > (0.8*self._max_joystick_value):
-            #     print(event.state)
+            # print(event.state)
+            if event.code == 'SYN_REPORT':
+                # Ignore system sync reports - otherwise we end up with 2 events for every input action.
+                return False
             if event.code == 'ABS_X':
                 # Yaw - needs inverting to make 'up' on the controller = +1
                 self.yaw_demand = min(1,max(-1,event.state/self._max_joystick_value))
@@ -67,25 +76,49 @@ class GamePad:
             if event.code == 'BTN_SELECT':
                 # 'Select' button
                 print("Select button pressed, but currently does nothing")
-            if event.code == 'BTN_START':
-                # 'Start' button
-                print("Start button pressed, but currently does nothing")
+            if event.code == 'BTN_START' and event.state == 0:
+                # 'Start' button (just released)
+                print("Start button pressed, Trying to connect to helicopter server.")
+                self.init_connection_demand = True
             if event.code == 'BTN_MODE':
                 # 'XBox' button
-                print("XBox button pressed, but currently does nothing")
+                print("XBox button pressed, stopping the motor!")
+                if event.state == 1:
+                    self.stop_demand = True
+                    self.start_demand = False
             if event.code == 'BTN_TR':
                 # Right trigger button
-                print("Right trigger button pressed, but currently does nothing")
+                if event.state == 1:
+                    print("Right trigger button pressed")
+                    self.right_trigger_pressed = True
+                else:
+                    print("Right trigger button released")
+                    self.right_trigger_pressed = False
             if event.code == 'BTN_TL':
                 # Left trigger button
-                print("Left trigger button pressed, but currently does nothing")
+                if event.state == 1:
+                    print("Left trigger button pressed")
+                    self.left_trigger_pressed = True
+                else:
+                    print("Left trigger button released")
+                    self.left_trigger_pressed = False
+        # Check for a motor start request
+        if self.left_trigger_pressed and self.right_trigger_pressed:
+            print("Both right and left triggers depressed")
+            self.stop_demand = False
+            self.start_demand = True
+        return True
 
     def get_demands(self):
-        self.update_inputs()
-        return {
-            'throttle_demand': self.throttle_demand,
-            'yaw_demand': self.yaw_demand,
-            'pitch_demand': self.pitch_demand,
-            'roll_demand': self.roll_demand,
-        }
+        legit_update = self.update_inputs()
+        if legit_update:
+            return {
+                'stop_demand':self.stop_demand,
+                'start_demand':self.start_demand,
+                'throttle_demand': self.throttle_demand,
+                'yaw_demand': self.yaw_demand,
+                'pitch_demand': self.pitch_demand,
+                'roll_demand': self.roll_demand,
+                'init_connection_demand': self.init_connection_demand
+            }
     
