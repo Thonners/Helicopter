@@ -12,7 +12,6 @@ class HelicopterController:
         self.gp = self._get_gamepad()
         # Connect to the server
         with ControllerConnection(config_file) as self.heli_connection:
-            self.heli_connection.test_connection()
             # Create a background thread to run the controller listener on
             self.run_thread = True
             self.input_thread = Thread(target=self.get_input_demands, daemon=True)
@@ -31,18 +30,32 @@ class HelicopterController:
             raise e
 
     def get_input_demands(self):
+        print("Helicopter controller thread started. Press 'start' on the controller to initialise the connection to the Helicopter server.")
         while self.run_thread:
             # Check if a gamepad is present
             if self.gp:
                 try:
                     demands = self.gp.get_demands()
-                    print(demands)
-                    self.heli_connection.send_input_demands(demands)
+                    # print(demands)
+                    if demands:
+                        if self.heli_connection.is_connected:
+                            self.heli_connection.send_input_demands(demands)
+                        elif demands['init_connection_demand']:
+                            print("HelicopterServer connection requested")
+                            # Connect to the server
+                            connection_successful = self.heli_connection.init_connection()
+                            if connection_successful:
+                                print("Connection successful. Please connect the helicopter battery pack.")
+                                print("Once connected, hold both the left and right upper triggers to spin the motor up")
+                                print("Press Xbox button at any time to stop the motor")
+                        else:
+                            print("Press start to initialise the connection to the Helicopter server.")
                 except Exception as e:
-                    print("Had some exception")
+                    print("Had some exception. Aborting the controller")
                     print(e)
                     # TODO: Handle the loss of the gamepad?
-                    pass # We still need to check keyboard events in case of q/r being pressed
+                    self.run_thread = False
+                    break
             else:
                 # # Check the keyboard regardless (so we can listen for reset / quit requests)
                 # events = get_key()
@@ -51,8 +64,6 @@ class HelicopterController:
                 #         print(event.code)
                 print("Error: Gamepad required.")
                 self.run_thread = False
-
-            sleep(0.0001)
 
     def exit_thread(self):
         self.run_thread = False
