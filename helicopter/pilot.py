@@ -15,8 +15,8 @@ class HelicopterPilot:
         # Get the helicopter instance
         self.heli = Helicopter()
         # Gyro - how we sense the difference between the demand and the reality
-        # self.gyro = Gyro(normalise_rates=True,gyro_normalisation_values=self._gyro_normalisation_values,acceleration_normalisation_values=[1,1,1])
-        self.gyro = None
+        self.gyro = Gyro(normalise_rates=True,gyro_normalisation_values=self._gyro_normalisation_values,acceleration_normalisation_values=[1,1,1])
+        #self.gyro = None
         # Init the demands variable
         self.demands = None
         self.flying = False
@@ -42,8 +42,14 @@ class HelicopterPilot:
     def fly(self):
         while self.thread_running:
             if self.flying:
-                accelerations = self.gyro.get_acceleration()
-                gyro_rates = self.gyro.get_gyro()
+                try:
+                    accelerations = self.gyro.get_acceleration()
+                    gyro_rates = self.gyro.get_gyro()
+                except IOError as e:
+                    print("Error getting gyro/accelerometer details!")
+                    print(e)
+                    accelerations = [0,0,0]
+                    gyro_rates = [0,0,0]
                 for demand in self.demands:
                     demand_value = self.demands[demand]
                     if demand == 'stop_demand':
