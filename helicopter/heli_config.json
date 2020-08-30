@@ -26,9 +26,9 @@
             "gpio_pin":22,
             "centre_offset":0,
             "invert_up_down":0
+        }
     },
     "tail_servo": {
-        "name": "tail",
         "gpio_pin":27,
         "centre_offset":0,
         "invert_up_down":0
