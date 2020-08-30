@@ -5,7 +5,8 @@ import json
 import sys
 import socket
 import socketserver
-# from pilot import HelicopterPilot
+from time import sleep
+from pilot import HelicopterPilot
 
 class HeliServerConnectionHandler(socketserver.StreamRequestHandler):
     """
@@ -28,17 +29,26 @@ class HeliServerConnectionHandler(socketserver.StreamRequestHandler):
             print("Controller connection established")
         else:
             raise ConnectionError()
-        # pilot = HelicopterPilot
+        self.pilot = HelicopterPilot()
         while self.connection_active:
             # Read the data (raw bytes)
             raw_data = self.rfile.readline().strip()
             # Decode the data
             data = raw_data.decode('utf-8')
-            print(f"{self.client_address[0]} wrote: {data}")
+            print(f"{self.client_address[0]} sent: {data}")
+            try:
+                demands = json.loads(data)
+                self.pilot.update_demands(demands)
+            except json.JSONDecodeError as e:
+                print("Error decoding the demands. Stopping the helicopter now")
+                self.pilot.stop_flying()
+                print(e)
     
     def finish(self):
         print("Finish called")
         self.connection_active = False
+        # Ensure the motor is not spinining if the connection is lost
+        # self.pilot.stop_flying()
 
 class HelicopterServer:
 
@@ -68,9 +78,14 @@ class HelicopterServer:
 if __name__ == "__main__":
     try:
         print("Starting helicopter server...")
-        with HelicopterServer() as server:
-            while True:
-                pass
+        while True:
+            try:
+                with HelicopterServer() as server:
+                    while True:
+                        pass
+            except OSError:
+                print("Error binding to port, already in use. Trying again in 5 seconds")
+                sleep(5)
     except KeyboardInterrupt:
         print("Server shutting down.")
         # server.__exit__()
