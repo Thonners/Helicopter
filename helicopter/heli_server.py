@@ -7,6 +7,7 @@ import socket
 import socketserver
 from time import sleep
 from pilot import HelicopterPilot
+from pithonwy.actuators import Motor 	# Keep this so we can force the motor shutdown if the server crashes/is killed
 
 class HeliServerConnectionHandler(socketserver.StreamRequestHandler):
     """
@@ -88,4 +89,5 @@ if __name__ == "__main__":
                 sleep(5)
     except KeyboardInterrupt:
         print("Server shutting down.")
-        # server.__exit__()
+        m = Motor()
+        m.arm()
