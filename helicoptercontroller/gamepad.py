@@ -6,7 +6,16 @@ Gamepad class to convert the basic gamepad interface into helicopter controller 
 - Right joystick X = Roll
 - Right joystick Y = Pitch
 
- """
+Startup Procedure:
+ 1. Power on helicopter and ensure heli_server is running
+ 2. Press the start button to connect the controller to the helicopter
+ 3. Connect the battery to the ESC (might need to do this earlier if things fall over due to no power being delivered to gyro)
+ 4. Ensure the heli is on a flat, stationary surface then press and hold 'select' for 2s to calibrate the gyro
+ 5. Press both (upper) triggers simulateously to start the motor spinning
+
+ Press the Xbox button at any time to stop the motor
+
+"""
 from inputs import devices
 
 class GamePad:
@@ -22,6 +31,7 @@ class GamePad:
         # Initialise the status of all the possible inputs
         self.stop_demand = False
         self.start_demand = False
+        self.calibration_demand = False
         self.throttle_demand = 0
         self.yaw_demand = 0
         self.pitch_demand = 0
@@ -41,8 +51,8 @@ class GamePad:
                 # Ignore system sync reports - otherwise we end up with 2 events for every input action.
                 return False
             if event.code == 'ABS_X':
-                # Yaw - needs inverting to make 'up' on the controller = +1
-                self.yaw_demand = min(1,max(-1,event.state/self._max_joystick_value))
+                # Yaw - needs inverting to make 'left' on the controller +ve (i.e. +ve about an 'upwards' Z axis)
+                self.yaw_demand = -min(1,max(-1,event.state/self._max_joystick_value))
             if event.code == 'ABS_Y':
                 # Throttle
                 # TODO: Filter the throttle demand so it only starts after has been fully down, or move it to right trigger
@@ -75,6 +85,10 @@ class GamePad:
                 print("A button pressed, but currently does nothing")
             if event.code == 'BTN_SELECT':
                 # 'Select' button
+                if event.state == 1:
+                    self.calibration_demand = True
+                else:
+                    self.calibration_demand = False
                 print("Select button pressed, but currently does nothing")
             if event.code == 'BTN_START' and event.state == 0:
                 # 'Start' button (just released)
@@ -115,6 +129,7 @@ class GamePad:
             return {
                 'stop_demand':self.stop_demand,
                 'start_demand':self.start_demand,
+                'calibration_demand':self.calibration_demand,
                 'throttle_demand': self.throttle_demand,
                 'yaw_demand': self.yaw_demand,
                 'pitch_demand': self.pitch_demand,
