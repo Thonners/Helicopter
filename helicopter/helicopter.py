@@ -6,7 +6,9 @@ from tail_servo import TailServo
 import json
 
 class Helicopter:
-    def __init__(self, config='./heli_confi.json'):
+    def __init__(self, config=None):
+        if not config:
+            config = HelicopterConfig()
         # Get the sensors/actuators that we will need
         # # Gyro
         # self.gyro = Gyro()
@@ -18,22 +20,32 @@ class Helicopter:
         # Tail
         self.tail = TailServo(**config.tail_servo)
     def arm(self):
-        self.m.arm()
+        self.motor.arm()
+    def stop(self, estop=False):
+        """ Stop the motor (but not instantaneously (unless E-stopping!)) """
+        if estop:
+            self.motor.estop()
+            print("Helicopter motor E-Stop!!!")
+        else:
+            print("Helicopter motor spinning down!")
+            self.motor.spin_down()
     def start_motor(self,initial_speed = 0.3):
         """ Slowly spins up the motor to the requested speed """
-        self.motor.spin_up(limit=initial_speed)
+        print("Helicopter motor spinning up!")
+        self.motor.spin_up(limit=initial_speed, stop_after_initial_spin=False)
+        print("\tMotor running")
     def level_swash(self):
-        [s.centre() for s in self.swash_plate]
+        self.swash_plate.level()
     def up_more(self):
         # Loop through all servos controlling the swash plate and increment them to make the swash plate go up (and therefore AoA of blades go down)
-        [s.decrement() for s in self.swash_plate]    
+        self.swash_plate.lower()
     def down_more(self):
         # Loop through all servos controlling the swash plate and decrement them to make the swash plate go down
-        [s.increment() for s in self.swash_plate]
+        self.swash_plate.rise()
     def pitch_forwards(self):
-        self.rear.decrement()
+        self.swash_plate.pitch_forwards()
     def pitch_backwards(self):
-        self.rear.increment()
+        self.swash_plate.pitch_backwards()
     def turn_more_left(self):
         self.tail.decrement()
     def turn_more_right(self):
@@ -55,7 +67,7 @@ class HelicopterConfig:
         self.motor = conf['motor']
         self.swash_servos = conf['swash_servos']
         self.tail_servo = conf['tail_servo']
-        self.motgyroor = conf['gyro']
+        self.gyro = conf['gyro']
 
 class HelicopterConfigParseError(Exception):
     pass

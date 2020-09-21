@@ -8,12 +8,15 @@ class SwashPlate:
         left_servo = SwashPlateServo(**left)
         rear_servo = SwashPlateServo(**rear)
         self.servos = [right_servo, left_servo, rear_servo]
+    def level(self):
+        """ Set the swash-plate to its 'level' position """
+        [s.centre() for s in self.servos]
     def rise(self):
         """ Raise the swashplate uniformly """
-        [servo.increment() for servo in servos]
+        [servo.increment() for servo in self.servos]
     def lower(self):
         """ Lower the swashplate uniformly """
-        [servo.decrement() for servo in servos]
+        [servo.decrement() for servo in self.servos]
     def pitch(self, amount:int):
         """ 
             Rotate the swashplate about 'Y' axis by 'amount' (-1 -> +1) without altering its height. 
@@ -22,11 +25,11 @@ class SwashPlate:
         # The servo movement that would correspond to a value of '1' (if the position of the servo is also '1')
         # TODO: Get this value from somewhere more appropriate than hard coding it here
         max_servo_delta=15
-        for servo in servos:
+        for servo in self.servos:
             # Get the amount we need to move this servo
             servo_delta = max_servo_delta * amount * servo.forward_position
             # Decrement it by that amount so that the front of the servo moves down if the amount is +ve (back will move up, as the decrement will be -ve)
-            servo.servo.decrement(servo_delta)
+            servo.decrement(servo_delta)
     def roll(self, amount:int):
         """ 
             Rotate the swashplate about 'X' axis by 'amount' (-1 -> +1) without altering its height. 
@@ -35,11 +38,11 @@ class SwashPlate:
         # The servo movement that would correspond to a value of '1' (if the position of the servo is also '1')
         # TODO: Get this value from somewhere more appropriate than hard coding it here
         max_servo_delta=15
-        for servo in servos:
+        for servo in self.servos:
             # Get the amount we need to move this servo
             servo_delta = max_servo_delta * amount * servo.lateral_position
             # Decrement it by that amount so that the front of the servo moves down if the amount is +ve (back will move up, as the decrement will be -ve)
-            servo.servo.decrement(servo_delta)
+            servo.decrement(servo_delta)
     def pitch_forwards(self, amount:int):
         """ Rotate the swashplate forwards by 'amount' (0-1) without altering its net height """
         self.pitch(amount)
@@ -59,12 +62,12 @@ class SwashPlate:
         # TODO: Provide a better interface for this
         print("To calibrate the swash plate, please ensure the helicopter is on a level surface.")
         print("Set the swash plate to nominally level with: swash_plate.centre()")
-        print("Increment/decrement each swash servo until the swash plate is also level."
+        print("Increment/decrement each swash servo until the swash plate is also level.")
         print("\tTo access the servos: swash_plate.right_servo / swash_plate.left_servo / swash_plate.rear_servo")
-        print("\tTo raise/lowwer the servo: servo.increment() / servo.decrement()")
+        print("\tTo raise/lower the servo: servo.increment() / servo.decrement()")
         print("\tWhen the swash plate is level, run this command again to get the required offsets")
         print("")
-        print(f'The current offsets are: "right": {self.right_servo.current_position}, "left":{self.left_servo.current_position}, "rear":{self.rear_servo.current_position}')
+        # print(f'The current offsets are: "right": {self.right_servo.current_position}, "left":{self.left_servo.current_position}, "rear":{self.rear_servo.current_position}')
         
 
 class SwashPlateServo(Servo):
