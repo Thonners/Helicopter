@@ -26,14 +26,14 @@ class SwashPlate:
         # The servo movement that would correspond to a value of '1' (if the position of the servo is also '1')
         # TODO: Get this value from somewhere more appropriate than hard coding it here
         max_servo_delta=15
-        print(f'Current swashplate targets; Collective: {self._collective}, Pitch: {self._pitch}, Roll: {self._roll}')
+        # print(f'Current swashplate targets; Collective: {self._collective}, Pitch: {self._pitch}, Roll: {self._roll}')
         for servo in self.servos:
             # Get the amount we need to move this servo
             servo_target_raw = self._collective + self._roll * servo.lateral_position + self._pitch * servo.forward_position
             # Limit the demand to -1 <= demand <= +1
             servo_target = max_servo_delta * max(-1,min(1,servo_target_raw))
             servo.set_position(servo_target)
-            print(f'Servo "{servo.forward_position},{servo.lateral_position}" target value: {servo_target}')
+            # print(f'Servo "{servo.forward_position},{servo.lateral_position}" target value: {servo_target}')
     def set_height(self,height:float):
         """ 
             Set the height of the swashplate to 'height' (-1 -> +1) without altering its orientation. 

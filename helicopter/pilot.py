@@ -68,10 +68,11 @@ class HelicopterPilot:
                     if demand == 'throttle_demand':
                         # Need to blend the throttle and blade pitch - increment throttle to match demand if above the threshold
                         throttle_demand = max(self._min_throttle, abs(demand_value)) # Make sure that the throttle is always at least _min_throttle, and set it equal to the magnitude of the demand
-                        # Update the motor speed
-                        self.heli.motor.set_motor_speed(throttle_demand)
-                        # Update the swash plate position
-                        self.heli.swash_plate.set_height(demand)
+                        if self.flying:
+                            # Update the motor speed
+                            self.heli.motor.set_motor_speed(throttle_demand)
+                            # Update the swash plate position
+                            self.heli.swash_plate.set_height(demand_value)
                     if demand == 'yaw_demand':
                         current_yaw_rate = gyro_rates[2]
                         demand_delta = demand_value - current_yaw_rate
@@ -87,7 +88,6 @@ class HelicopterPilot:
                     if demand == 'roll_demand':
                         pass
                     if demand == 'request_gyro_state_demand':
-                        print(f"gyro request: {demand_value}")
                         if demand_value:
                             print(f"Gyro rates: {gyro_rates}, accelerations: {accelerations}")
 
