@@ -5,6 +5,7 @@ import json
 import sys
 import socket
 import socketserver
+import errno
 from time import sleep
 from pilot import HelicopterPilot
 from pithonwy.actuators import Motor 	# Keep this so we can force the motor shutdown if the server crashes/is killed
@@ -31,13 +32,24 @@ class HeliServerConnectionHandler(socketserver.StreamRequestHandler):
         else:
             raise ConnectionError()
         # Wait for word that the battery is connected
-        battery_connected = False
-        while not battery_connected:
+        pilot_started = False
+        while not pilot_started:
             battery_connection_update = self.rfile.read(1)
             if battery_connection_update == bytes([2]):
-                battery_connected = True
-        # If battery connected, then start up the heli instance (need the connection else the power won't be there for the Gyro, etc.)
-        self.pilot = HelicopterPilot()
+                # Then user claims battery is connected, so let's fire up the HeliPilot instance
+                try:
+                    # If battery connected, then start up the heli instance (need the connection else the power won't be there for the Gyro, etc.)
+                    self.pilot = HelicopterPilot()
+                    # Send a 'Pilot wakeup successful' message back
+                    self.wfile.write(bytes([2]))
+                    pilot_started = True
+                except OSError as e:
+                    # An issue reading one of the sensors?
+                    if e.args[0] == errno.EREMOTEIO:
+                        # This is seen when the gyro can't start (usually because it doesn't have any power)
+                        print("Error starting Gyro. Please ensure main power battery conencted")
+                    else:
+                        print("Some error received whilst trying to initialise the HeliPilot instance :(")
         while self.connection_active:
             # Read the data (raw bytes)
             raw_data = self.rfile.readline().strip()
