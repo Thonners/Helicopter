@@ -14,6 +14,7 @@ class ControllerConnection:
 
         print(self.conf)
         self.is_connected = False
+        self.pilot_awake = False
 
     def __enter__(self):
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -21,7 +22,7 @@ class ControllerConnection:
         # Force NODELAY to stop the client waiting for a minmum amount of data before sending it
         self.s.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         return self
-        
+
     def __exit__(self, exc_type, exc_value, traceback):
         print("Closing controller connection")
         if self.s:
@@ -36,8 +37,16 @@ class ControllerConnection:
             self.is_connected = True
         return self.is_connected
 
-    def test_connection(self, test_message="Test"):
+    def test_connection(self):
         self._send_data(bytes([1]))
+
+    def set_battery_connected(self):
+        self._send_data(bytes([2]))
+        pilot_started_confirmation = self.s.recv(1)
+        if pilot_started_confirmation == bytes([2]):
+            print("Helicopter Pilot woken up and ready to fly :)")
+            self.pilot_awake = True
+        return self.pilot_awake
 
     def send_input_demands(self,demands):
         # Convert to json so it can be encoded as a string
@@ -48,7 +57,7 @@ class ControllerConnection:
         if type(data) == str:
             data += '\n'
             data = data.encode('utf-8')
-        print(f"Sending data: {data}")
+        # print(f"Sending data: {data}")
         self.s.send(data)
         if response_expected:
             # TODO: Deal with reading the reply...

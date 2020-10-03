@@ -37,6 +37,8 @@ class GamePad:
         self.pitch_demand = 0
         self.roll_demand = 0
         self.init_connection_demand = False
+        self.battery_connected = False
+        self.request_gyro_state = False
         # Make a note of the button states, for compound button press requirements
         self.left_trigger_pressed = False
         self.right_trigger_pressed = False
@@ -73,7 +75,11 @@ class GamePad:
                 # self.?_demand = Math.min(1,Math.max(-1,event.state/self._max_joystick_value))
             if event.code == 'BTN_NORTH':
                 # 'Y' button
-                print("Y button pressed, but currently does nothing")
+                if event.state == 1:
+                    print("Y button pressed, requesting gyro readings")
+                    self.request_gyro_state = True
+                else:
+                    self.request_gyro_state = False
             if event.code == 'BTN_WEST':
                 # 'X' button
                 print("X button pressed, but currently does nothing")
@@ -82,14 +88,16 @@ class GamePad:
                 print("B button pressed, but currently does nothing")
             if event.code == 'BTN_SOUTH':
                 # 'A' button
-                print("A button pressed, but currently does nothing")
+                if event.state == 1:
+                    print("A button pressed, waking up the pilot...")
+                    self.battery_connected = True
             if event.code == 'BTN_SELECT':
                 # 'Select' button
                 if event.state == 1:
                     self.calibration_demand = True
+                    print("Select button pressed, initiating Gyro calibration")
                 else:
                     self.calibration_demand = False
-                print("Select button pressed, but currently does nothing")
             if event.code == 'BTN_START' and event.state == 0:
                 # 'Start' button (just released)
                 print("Start button pressed, Trying to connect to helicopter server.")
@@ -134,6 +142,7 @@ class GamePad:
                 'yaw_demand': self.yaw_demand,
                 'pitch_demand': self.pitch_demand,
                 'roll_demand': self.roll_demand,
-                'init_connection_demand': self.init_connection_demand
+                'init_connection_demand': self.init_connection_demand,
+                'battery_connected': self.battery_connected,
             }
     
