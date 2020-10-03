@@ -44,12 +44,18 @@ class HeliServerConnectionHandler(socketserver.StreamRequestHandler):
                     self.wfile.write(bytes([2]))
                     pilot_started = True
                 except OSError as e:
+                    # Let the controller know that there was an issue (otherwise it'll block!)
+                    self.wfile.write(bytes([0]))
                     # An issue reading one of the sensors?
                     if e.args[0] == errno.EREMOTEIO:
                         # This is seen when the gyro can't start (usually because it doesn't have any power)
                         print("Error starting Gyro. Please ensure main power battery conencted")
                     else:
                         print("Some error received whilst trying to initialise the HeliPilot instance :(")
+                except ValueError as e:
+                    print("Error starting Gyro. Please ensure main power battery conencted")
+                    print(f"Error details: {e.args}")
+                    self.wfile.write(bytes([0]))
         while self.connection_active:
             # Read the data (raw bytes)
             raw_data = self.rfile.readline().strip()
