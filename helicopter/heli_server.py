@@ -30,13 +30,20 @@ class HeliServerConnectionHandler(socketserver.StreamRequestHandler):
             print("Controller connection established")
         else:
             raise ConnectionError()
+        # Wait for word that the battery is connected
+        battery_connected = False
+        while not battery_connected:
+            battery_connection_update = self.rfile.read(1)
+            if battery_connection_update == bytes([2]):
+                battery_connected = True
+        # If battery connected, then start up the heli instance (need the connection else the power won't be there for the Gyro, etc.)
         self.pilot = HelicopterPilot()
         while self.connection_active:
             # Read the data (raw bytes)
             raw_data = self.rfile.readline().strip()
             # Decode the data
             data = raw_data.decode('utf-8')
-            print(f"{self.client_address[0]} sent: {data}")
+            # print(f"{self.client_address[0]} sent: {data}")
             try:
                 demands = json.loads(data)
                 self.pilot.update_demands(demands)
@@ -82,6 +89,7 @@ if __name__ == "__main__":
         while True:
             try:
                 with HelicopterServer() as server:
+                    print("Server successfully started :)")
                     while True:
                         pass
             except OSError:
