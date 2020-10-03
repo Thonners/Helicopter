@@ -86,14 +86,10 @@ class HelicopterPilot:
                         pass
                     if demand == 'roll_demand':
                         pass
-                    if demand == 'init_connection_demand':
-                        pass
-#                    if demand == 'calibration_demand':
-#                        print(f"calibration demand: {demand_value}")
-#                        if demand_value:
-                            # Then we want to calibrate - the gyro class will prevent us from running this multiple times, so just call calibrate() while the button is down
-#                            print("Calling gyro.calibrate()")
- #                           self.gyro.calibrate()
+                    if demand == 'request_gyro_state_demand':
+                        print(f"gyro request: {demand_value}")
+                        if demand_value:
+                            print(f"Gyro rates: {gyro_rates}, accelerations: {accelerations}")
 
     def stop_flying(self):
         """ Cleanly and safely shut down the helicopter """
