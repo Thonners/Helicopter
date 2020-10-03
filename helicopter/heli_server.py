@@ -5,6 +5,7 @@ import json
 import sys
 import socket
 import socketserver
+import errno
 from time import sleep
 from pilot import HelicopterPilot
 from pithonwy.actuators import Motor 	# Keep this so we can force the motor shutdown if the server crashes/is killed
@@ -30,13 +31,37 @@ class HeliServerConnectionHandler(socketserver.StreamRequestHandler):
             print("Controller connection established")
         else:
             raise ConnectionError()
-        self.pilot = HelicopterPilot()
+        # Wait for word that the battery is connected
+        pilot_started = False
+        while not pilot_started:
+            battery_connection_update = self.rfile.read(1)
+            if battery_connection_update == bytes([2]):
+                # Then user claims battery is connected, so let's fire up the HeliPilot instance
+                try:
+                    # If battery connected, then start up the heli instance (need the connection else the power won't be there for the Gyro, etc.)
+                    self.pilot = HelicopterPilot()
+                    # Send a 'Pilot wakeup successful' message back
+                    self.wfile.write(bytes([2]))
+                    pilot_started = True
+                except OSError as e:
+                    # Let the controller know that there was an issue (otherwise it'll block!)
+                    self.wfile.write(bytes([0]))
+                    # An issue reading one of the sensors?
+                    if e.args[0] == errno.EREMOTEIO:
+                        # This is seen when the gyro can't start (usually because it doesn't have any power)
+                        print("Error starting Gyro. Please ensure main power battery conencted")
+                    else:
+                        print("Some error received whilst trying to initialise the HeliPilot instance :(")
+                except ValueError as e:
+                    print("Error starting Gyro. Please ensure main power battery conencted")
+                    print(f"Error details: {e.args}")
+                    self.wfile.write(bytes([0]))
         while self.connection_active:
             # Read the data (raw bytes)
             raw_data = self.rfile.readline().strip()
             # Decode the data
             data = raw_data.decode('utf-8')
-            print(f"{self.client_address[0]} sent: {data}")
+            # print(f"{self.client_address[0]} sent: {data}")
             try:
                 demands = json.loads(data)
                 self.pilot.update_demands(demands)
@@ -82,6 +107,7 @@ if __name__ == "__main__":
         while True:
             try:
                 with HelicopterServer() as server:
+                    print("Server successfully started :)")
                     while True:
                         pass
             except OSError:
