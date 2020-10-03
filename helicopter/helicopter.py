@@ -71,9 +71,3 @@ class HelicopterConfig:
 
 class HelicopterConfigParseError(Exception):
     pass
-
-
-rear = Servo(17)
-right = Servo(18)
-left = Servo(22)
-tail = Servo(27)

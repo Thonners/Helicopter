@@ -9,6 +9,7 @@ class HelicopterPilot:
     _gyro_normalisation_values = [50,50,80]
 
     # Thresholds
+    _min_throttle = 0.3
     _yaw_threshold = 0.1
 
     def __init__(self):
@@ -16,7 +17,6 @@ class HelicopterPilot:
         self.heli = Helicopter()
         # Gyro - how we sense the difference between the demand and the reality
         self.gyro = Gyro(normalise_rates=True,gyro_normalisation_values=self._gyro_normalisation_values,acceleration_normalisation_values=[1,1,1])
-        #self.gyro = None
         # Init the demands variable
         self.demands = None
         self.flying = False
@@ -24,8 +24,6 @@ class HelicopterPilot:
         # Create a thread for this to run in
         self.pilot_thread = Thread(target=self.fly, daemon=True)
         self.pilot_thread.start()
-        # while self.run_thread:
-        #     pass
 
     def update_demands(self, demands):
         """ Update the helicopter's input demands"""
@@ -68,7 +66,12 @@ class HelicopterPilot:
                         # Motor started before we're 'flying', so do nothing now...
                         pass
                     if demand == 'throttle_demand':
-                        pass
+                        # Need to blend the throttle and blade pitch - increment throttle to match demand if above the threshold
+                        throttle_demand = max(self._min_throttle, abs(demand_value)) # Make sure that the throttle is always at least _min_throttle, and set it equal to the magnitude of the demand
+                        # Update the motor speed
+                        self.heli.motor.set_motor_speed(throttle_demand)
+                        # Update the swash plate position
+                        self.heli.swash_plate.set_height(demand)
                     if demand == 'yaw_demand':
                         current_yaw_rate = gyro_rates[2]
                         demand_delta = demand_value - current_yaw_rate
