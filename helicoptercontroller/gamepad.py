@@ -73,16 +73,17 @@ class GamePad:
                 # Right lower trigger
                 print("Right lower trigger pressed, but currently does nothing")
                 # self.?_demand = Math.min(1,Math.max(-1,event.state/self._max_joystick_value))
-            if event.code == 'BTN_NORTH':
+            if event.code == 'BTN_NORTH':   ## NOTE: BTN_NORTH should be 'Y', but for some reason it's coming in as the wrong code (X&Y are reversed) - known bug in inputs
+                # 'X' button
+                print("X button pressed, but currently does nothing")
+            if event.code == 'BTN_WEST':
                 # 'Y' button
                 if event.state == 1:
                     print("Y button pressed, requesting gyro readings")
                     self.request_gyro_state = True
                 else:
+                    print("Y button released, not requesting gyro readings")
                     self.request_gyro_state = False
-            if event.code == 'BTN_WEST':
-                # 'X' button
-                print("X button pressed, but currently does nothing")
             if event.code == 'BTN_EAST':
                 # 'B' button
                 print("B button pressed, but currently does nothing")
@@ -144,5 +145,6 @@ class GamePad:
                 'roll_demand': self.roll_demand,
                 'init_connection_demand': self.init_connection_demand,
                 'battery_connected': self.battery_connected,
+                'request_gyro_state_demand': self.request_gyro_state,
             }
     

@@ -45,10 +45,14 @@ class HelicopterController:
                             else:
                                 if self.heli_connection.set_battery_connected():
                                     print("")
-                                    print("\tTo spin up the motor, hold both the left and right upper triggers together")
+                                    print("\tPress SELECT to calibrate the gyro")
                                     print("")
-                                    print("\tPress Xbox button at any time to stop the motor")
+                                    print("\tPress LEFT & RIGHT UPPER TRIGGERS together to spin up the motor")
+                                    print("")
+                                    print("\tPress XBOX button at any time to stop the motor!")
+                                    print("")
                                 else:
+                                    print("")
                                     print("Some error occured during the waking up of the pilot :( Please ensure battery connected and press A again to retry")
                                     self.gp.battery_connected = False
                         elif demands['init_connection_demand']:
@@ -58,6 +62,7 @@ class HelicopterController:
                             if connection_successful:
                                 print("")
                                 print("\tConnection successful. Please connect the helicopter battery pack then press A.")
+                                print("")
                         else:
                             print("Press start to initialise the connection to the Helicopter server.")
                 except OSError as e:
@@ -66,7 +71,7 @@ class HelicopterController:
                         error_no = e.args[0]
                         if error_no == errno.EHOSTUNREACH:
                             # No route to host
-                            print("Unable to connect to the helicopter server. Please press START again to retry connecting when the heli server is available.")
+                            print("Unable to connect to the helicopter server - is it on? Please press START again to retry connecting when the heli server is available.")
                         elif error_no == errno.EPIPE:
                             # Broken pipe
                             print("Connection to heli lost.")
@@ -75,6 +80,9 @@ class HelicopterController:
                         elif error_no == errno.ECONNRESET:
                             # Connection reset by peer
                             print("Connection reset by peer - heli server has shutdown!")
+                        elif error_no == errno.ECONNREFUSED:
+                            # Connection refused
+                            print("Connection refused - is the server running on the heli?")
                         else:
                             print(f"OSError received: {e.args}")
                             # Abort as I'm not sure what's going on
