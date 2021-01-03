@@ -85,7 +85,9 @@ class HelicopterServer:
         self.running = True
 
     def __enter__(self):
-        """ Start listening for connections """
+        """ Check pigpiod running and start it if not. Then start listening for connections """
+        # Check for pigpiod
+        self.start_pigpiod()
         # Create the server, binding to host/port set in the settings
         print(f"Starting server on host: {self.host}, listening on port: {self.port}...")
         self.server = socketserver.TCPServer((self.host, self.port), HeliServerConnectionHandler)
@@ -100,6 +102,11 @@ class HelicopterServer:
         self.running = False
         self.server.shutdown()
         self.server.close()
+
+    def start_pigpiod(self):
+        """ Start the pigpio daemon """
+        # Start the daemon but pipe the error log to /dev/null so it doesn't clutter the screen output
+        os.system("sudo pigpiod 2>/dev/null")
 
 if __name__ == "__main__":
     try:
